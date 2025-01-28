@@ -2,10 +2,9 @@
 import { useIcon } from '../icons'
 
 // Utilities
+import { mount } from '@vue/test-utils'
 import { defineComponent, toRef } from 'vue'
 import { createVuetify } from '@/framework'
-import { mount } from '@vue/test-utils'
-import { describe, expect, it } from '@jest/globals'
 
 describe('icons.tsx', () => {
   const Component = defineComponent({

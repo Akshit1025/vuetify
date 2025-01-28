@@ -3,25 +3,26 @@ import './VTextarea.sass'
 import '../VTextField/VTextField.sass'
 
 // Components
+import { VCounter } from '@/components/VCounter/VCounter'
+import { VField } from '@/components/VField'
 import { filterFieldProps, makeVFieldProps } from '@/components/VField/VField'
 import { makeVInputProps, VInput } from '@/components/VInput/VInput'
-import { VCounter } from '@/components/VCounter'
-import { VField } from '@/components/VField'
+
+// Composables
+import { useFocus } from '@/composables/focus'
+import { forwardRefs } from '@/composables/forwardRefs'
+import { useProxiedModel } from '@/composables/proxiedModel'
 
 // Directives
 import Intersect from '@/directives/intersect'
 
-// Composables
-import { forwardRefs } from '@/composables/forwardRefs'
-import { useFocus } from '@/composables/focus'
-import { useProxiedModel } from '@/composables/proxiedModel'
-
 // Utilities
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, watchEffect } from 'vue'
 import { callEvent, clamp, convertToUnit, filterInputAttrs, genericComponent, propsFactory, useRender } from '@/util'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 
 // Types
 import type { PropType } from 'vue'
+import type { VCounterSlot } from '@/components/VCounter/VCounter'
 import type { VFieldSlots } from '@/components/VField/VField'
 import type { VInputSlots } from '@/components/VInput/VInput'
 
@@ -49,9 +50,13 @@ export const makeVTextareaProps = propsFactory({
 
   ...makeVInputProps(),
   ...makeVFieldProps(),
-}, 'v-textarea')
+}, 'VTextarea')
 
-export const VTextarea = genericComponent<Omit<VInputSlots & VFieldSlots, 'default'>>()({
+type VTextareaSlots = Omit<VInputSlots & VFieldSlots, 'default'> & {
+  counter: VCounterSlot
+}
+
+export const VTextarea = genericComponent<VTextareaSlots>()({
   name: 'VTextarea',
 
   directives: { Intersect },
@@ -145,6 +150,11 @@ export const VTextarea = genericComponent<Omit<VInputSlots & VFieldSlots, 'defau
     }
 
     const sizerRef = ref<HTMLTextAreaElement>()
+    const rows = ref(+props.rows)
+    const isPlainOrUnderlined = computed(() => ['plain', 'underlined'].includes(props.variant))
+    watchEffect(() => {
+      if (!props.autoGrow) rows.value = +props.rows
+    })
     function calculateInputHeight () {
       if (!props.autoGrow) return
 
@@ -165,8 +175,10 @@ export const VTextarea = genericComponent<Omit<VInputSlots & VFieldSlots, 'defau
           parseFloat(fieldStyle.getPropertyValue('--v-input-control-height'))
         )
         const maxHeight = parseFloat(props.maxRows!) * lineHeight + padding || Infinity
+        const newHeight = clamp(height ?? 0, minHeight, maxHeight)
+        rows.value = Math.floor((newHeight - padding) / lineHeight)
 
-        controlHeight.value = convertToUnit(clamp(height ?? 0, minHeight, maxHeight))
+        controlHeight.value = convertToUnit(newHeight)
       })
     }
 
@@ -193,8 +205,8 @@ export const VTextarea = genericComponent<Omit<VInputSlots & VFieldSlots, 'defau
       const hasCounter = !!(slots.counter || props.counter || props.counterValue)
       const hasDetails = !!(hasCounter || slots.details)
       const [rootAttrs, inputAttrs] = filterInputAttrs(attrs)
-      const [{ modelValue: _, ...inputProps }] = VInput.filterProps(props)
-      const [fieldProps] = filterFieldProps(props)
+      const { modelValue: _, ...inputProps } = VInput.filterProps(props)
+      const fieldProps = filterFieldProps(props)
 
       return (
         <VInput
@@ -209,18 +221,20 @@ export const VTextarea = genericComponent<Omit<VInputSlots & VFieldSlots, 'defau
               'v-text-field--suffixed': props.suffix,
               'v-textarea--auto-grow': props.autoGrow,
               'v-textarea--no-resize': props.noResize || props.autoGrow,
-              'v-text-field--flush-details': ['plain', 'underlined'].includes(props.variant),
+              'v-input--plain-underlined': isPlainOrUnderlined.value,
             },
             props.class,
           ]}
           style={ props.style }
           { ...rootAttrs }
           { ...inputProps }
+          centerAffix={ rows.value === 1 && !isPlainOrUnderlined.value }
           focused={ isFocused.value }
         >
           {{
             ...slots,
             default: ({
+              id,
               isDisabled,
               isDirty,
               isReadonly,
@@ -236,9 +250,10 @@ export const VTextarea = genericComponent<Omit<VInputSlots & VFieldSlots, 'defau
                 onClick:clear={ onClear }
                 onClick:prependInner={ props['onClick:prependInner'] }
                 onClick:appendInner={ props['onClick:appendInner'] }
-                role="textbox"
                 { ...fieldProps }
+                id={ id.value }
                 active={ isActive.value || isDirty.value }
+                centerAffix={ rows.value === 1 && !isPlainOrUnderlined.value }
                 dirty={ isDirty.value || props.dirty }
                 disabled={ isDisabled.value }
                 focused={ isFocused.value }
@@ -282,6 +297,7 @@ export const VTextarea = genericComponent<Omit<VInputSlots & VFieldSlots, 'defau
                             fieldClass,
                             'v-textarea__sizer',
                           ]}
+                          id={ `${slotProps.id}-sizer` }
                           v-model={ model.value }
                           ref={ sizerRef }
                           readonly
@@ -311,6 +327,7 @@ export const VTextarea = genericComponent<Omit<VInputSlots & VFieldSlots, 'defau
                       active={ props.persistentCounter || isFocused.value }
                       value={ counterValue.value }
                       max={ max.value }
+                      disabled={ props.disabled }
                       v-slots:default={ slots.counter }
                     />
                   </>
