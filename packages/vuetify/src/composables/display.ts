@@ -1,12 +1,10 @@
 // Utilities
-import { inject, reactive, shallowRef, toRefs, watchEffect } from 'vue'
-import { mergeDeep } from '@/util'
-
-// Globals
+import { computed, inject, reactive, shallowRef, toRefs, watchEffect } from 'vue'
+import { getCurrentInstanceName, mergeDeep, propsFactory } from '@/util'
 import { IN_BROWSER, SUPPORTS_TOUCH } from '@/util/globals'
 
 // Types
-import type { InjectionKey, Ref } from 'vue'
+import type { InjectionKey, PropType, Ref } from 'vue'
 
 export const breakpoints = ['sm', 'md', 'lg', 'xl', 'xxl'] as const // no xs
 
@@ -18,6 +16,11 @@ export type DisplayThresholds = {
   [key in DisplayBreakpoint]: number
 }
 
+export interface DisplayProps {
+  mobile?: boolean | null
+  mobileBreakpoint?: number | DisplayBreakpoint
+}
+
 export interface DisplayOptions {
   mobileBreakpoint?: number | DisplayBreakpoint
   thresholds?: Partial<DisplayThresholds>
@@ -26,6 +29,11 @@ export interface DisplayOptions {
 export interface InternalDisplayOptions {
   mobileBreakpoint: number | DisplayBreakpoint
   thresholds: DisplayThresholds
+}
+
+export type SSROptions = boolean | {
+  clientWidth: number
+  clientHeight?: number
 }
 
 export interface DisplayPlatform {
@@ -91,20 +99,20 @@ const parseDisplayOptions = (options: DisplayOptions = defaultDisplayOptions) =>
   return mergeDeep(defaultDisplayOptions, options) as InternalDisplayOptions
 }
 
-function getClientWidth (isHydrate?: boolean) {
-  return IN_BROWSER && !isHydrate
+function getClientWidth (ssr?: SSROptions) {
+  return IN_BROWSER && !ssr
     ? window.innerWidth
-    : 0
+    : (typeof ssr === 'object' && ssr.clientWidth) || 0
 }
 
-function getClientHeight (isHydrate?: boolean) {
-  return IN_BROWSER && !isHydrate
+function getClientHeight (ssr?: SSROptions) {
+  return IN_BROWSER && !ssr
     ? window.innerHeight
-    : 0
+    : (typeof ssr === 'object' && ssr.clientHeight) || 0
 }
 
-function getPlatform (isHydrate?: boolean): DisplayPlatform {
-  const userAgent = IN_BROWSER && !isHydrate
+function getPlatform (ssr?: SSROptions): DisplayPlatform {
+  const userAgent = IN_BROWSER && !ssr
     ? window.navigator.userAgent
     : 'ssr'
 
@@ -141,7 +149,7 @@ function getPlatform (isHydrate?: boolean): DisplayPlatform {
   }
 }
 
-export function createDisplay (options?: DisplayOptions, ssr?: boolean): DisplayInstance {
+export function createDisplay (options?: DisplayOptions, ssr?: SSROptions): DisplayInstance {
   const { thresholds, mobileBreakpoint } = parseDisplayOptions(options)
 
   const height = shallowRef(getClientHeight(ssr))
@@ -206,10 +214,41 @@ export function createDisplay (options?: DisplayOptions, ssr?: boolean): Display
   return { ...toRefs(state), update, ssr: !!ssr }
 }
 
-export function useDisplay () {
+export const makeDisplayProps = propsFactory({
+  mobile: {
+    type: Boolean as PropType<boolean | null>,
+    default: false,
+  },
+  mobileBreakpoint: [Number, String] as PropType<number | DisplayBreakpoint>,
+}, 'display')
+
+export function useDisplay (
+  props: DisplayProps = { mobile: null },
+  name = getCurrentInstanceName(),
+) {
   const display = inject(DisplaySymbol)
 
   if (!display) throw new Error('Could not find Vuetify display injection')
 
-  return display
+  const mobile = computed(() => {
+    if (props.mobile) {
+      return true
+    } else if (typeof props.mobileBreakpoint === 'number') {
+      return display.width.value < props.mobileBreakpoint
+    } else if (props.mobileBreakpoint) {
+      return display.width.value < display.thresholds.value[props.mobileBreakpoint]
+    } else if (props.mobile === null) {
+      return display.mobile.value
+    } else {
+      return false
+    }
+  })
+
+  const displayClasses = computed(() => {
+    if (!name) return {}
+
+    return { [`${name}--mobile`]: mobile.value }
+  })
+
+  return { ...display, displayClasses, mobile }
 }
