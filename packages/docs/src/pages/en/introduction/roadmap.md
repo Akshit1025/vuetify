@@ -1,10 +1,9 @@
 ---
-emphasized: true
 meta:
+  nav: Roadmap
   title: The Vuetify roadmap
   description: The upcoming planned features and new functionality coming to Vuetify. New components, new directives, and much much more!.
   keywords: vuetify roadmap, future plans, new vuetify features
-nav: Roadmap
 related:
   - /introduction/long-term-support/
   - /introduction/enterprise-support/
@@ -15,54 +14,95 @@ related:
 
 Vuetify is always under development. We are constantly working towards improving the existing codebase, adding new features, and expanding the ecosystem with developer tooling that makes building applications even easier.
 
-<entry />
+<PageFeatures />
 
-## In Development
+<VoPromotionsCardVuetify />
 
-The following releases are currently under development:
+## 2024 Component Roadmap
 
-<alert type="warning">
+The following is a list of all planned components for the year 2024.
 
-  This is not an exhaustive list and is subject to change at any time without notice
+| Component                                                               | Entering Labs | Production Release            |
+|-------------------------------------------------------------------------|---------------|-------------------------------|
+| [v3.8 (Andromeda)](https://github.com/vuetifyjs/vuetify/milestone/74)   |               | Q1 2025 { .bg-surface-light } |
+| [v-number-input](/components/number-inputs/)                            | *             |                               |
+| [v-snackbar-queue](/components/snackbar-queue/)                         | *             |                               |
+| [v-time-picker](/components/time-pickers/)                              | *             |                               |
+| [v-treeview](/components/treeview/)                                     | *             |                               |
+| [v-stepper-vertical](/components/vertical-steppers/)                    | *             |                               |
+| [v4.0 (Revisionist)](https://github.com/vuetifyjs/vuetify/milestone/62) |               | 2025 { .bg-surface-light }    |
+| [v-date-input](/components/date-inputs/)                                | *             |                               |
+| [v-calendar](/components/calendars/)                                    | *             |                               |
+| [v-time-input](https://github.com/vuetifyjs/vuetify/pull/19709)         | Q1 2025       |                               |
+| Future - v4.1+                                                          |               | TBD { .bg-surface-light }     |
+| [v-file-upload](https://github.com/vuetifyjs/vuetify/pull/19667)        | *             |                               |
+| v-date-time-picker                                                      | Q1 2025       |                               |
+| v-date-range-picker                                                     | Q1 2025       |                               |
+| v-video                                                                 | TBD           |                               |
+| v-feature-discovery                                                     | TBD           |                               |
 
-</alert>
-
-### v3.4 (Blackguard)
-
-- **Target Release:** Q3 2023
-- **Overview:** This release will be smaller in scope with a primary focus on expanding our testing coverage and will include 4 new components:
-  - `<v-overflow-btn>`
-  - `<v-otp-input>`
-  - `<v-speed-dial>`
-  - `<v-stepper>`
-
-- **Milestone Issues:** [Github Issues](https://github.com/vuetifyjs/vuetify/milestone/61)
-
-### v3.3 (Icarus)
-
-- **Target Release:** Q2 2023
-- **Overview:** A small intermediary minor that will release alongside Vue v3.3 and include a few small features.
-- **Milestone Issues:** [Github Issues](https://github.com/vuetifyjs/vuetify/milestone/67)
-
-### v2.7 (Nirvana)
-
-- **Target Release:** Q2 2023
-- **Support until:** 18 months after release
-- **Overview:** Backports and deprecations from v3.0.0 to help developers prepare for v3 upgrade
-
-----
-
-## Long-term support (LTS)
-
-The following versions have continued maintenance for backwards compatible fixes, major bugs, and security vulnerabilities. More information is located on the [Long-term support](/introduction/long-term-support/) page.
-
-<promoted slug="vuetify-github-sponsors" />
-
-<promoted slug="vuetify-open-collective" />
+\* Already in Labs { .text-caption }
 
 ## Released
 
 The following are the already released **minor** and **major** version updates. Find more information on the [latest releases](https://github.com/vuetifyjs/vuetify/releases/latest) on GitHub.
+
+### v3.7 (Odyssey)
+
+- **Released:** August 2024
+- **Target Release:** Q3 2024
+- **Notes:** [v3.7 Release](/getting-started/release-notes/?version=v3.7.0)
+- **Overview:** Added more validation options and proper submenu support.
+- **Milestone Issues:** [Github Issues](https://github.com/vuetifyjs/vuetify/milestone/73)
+
+### v3.6 (Nebula)
+
+- **Released:** April 2024
+- **Hero:** [Banner](https://cdn.vuetifyjs.com/docs/images/release-banners/nebula-36.png)
+- **Target Release:** Q2 2024
+- **Notes:** [v3.6 Release](/getting-started/release-notes/?version=v3.6.0)
+- **Overview:** Introduced 5 new components to the main framework from Labs:
+  - [v-fab](/components/floating-action-buttons/)
+  - [v-empty-state](/components/empty-states/)
+  - [v-sparkline](/components/sparklines/)
+  - [v-speed-dial](/components/speed-dials/)
+  - [v-confirm-edit](/components/confirm-edit/)
+  - Multiple bug fixes and improvements.
+- **Milestone Issues:** [Github Issues](https://github.com/vuetifyjs/vuetify/milestone/72)
+
+### v3.5 (Polaris)
+
+- **Released:** January 2024
+- **Hero:** [Banner](https://cdn.vuetifyjs.com/docs/images/release-banners/polaris-35.png)
+- **Target Release:** Q1 2024
+- **Notes:** [v3.5 Release](/getting-started/release-notes/?version=v3.5.0)
+- **Overview:** A maintenance cycle post v3.4 that will focuses on bug fixes and general improvements.
+- **Milestone Issues:** [Github Issues](https://github.com/vuetifyjs/vuetify/milestone/70)
+
+### v3.4 (Blackguard)
+
+- **Released:** November 2023
+- **Hero:** [Banner](https://cdn.vuetifyjs.com/docs/images/release-banners/blackguard-34.png)
+- **Target Release:** Q3 2023
+- **Notes:** [v3.4 Release](/getting-started/release-notes/?version=v3.4.0)
+- **Overview:** Introduced 8 updated components to the main framework from Labs:
+  - [v-bottom-sheet](/components/bottom-sheets/)
+  - [v-data-iterator](/components/data-iterators/)
+  - [v-data-table](/components/data-tables/)
+  - [v-date-picker](/components/date-pickers/)
+  - [v-infinite-scroll](/components/infinite-scroller/)
+  - [v-opt-input](/components/otp-input/)
+  - [v-skeleton-loader](/components/skeleton-loaders/)
+  - [v-stepper](/components/steppers/).
+- **Milestone Issues:** [Github Issues](https://github.com/vuetifyjs/vuetify/milestone/61)
+
+### v3.3 (Icarus)
+
+- **Released:** May 2023
+- **Target Release:** Q2 2023
+- **Notes:** [v3.3 Release](/getting-started/release-notes/?version=v3.3.0)
+- **Overview:** A small intermediary minor that will release alongside Vue v3.3 and include a few small features.
+- **Milestone Issues:** [Github Issues](https://github.com/vuetifyjs/vuetify/milestone/67)
 
 ### v3.2 (Orion)
 
@@ -101,14 +141,20 @@ The following are the already released **minor** and **major** version updates. 
 
 ----
 
+### v2.7 (Nirvana)
+
+- **Released:** July 2023
+- **Target Release:** Q2 2023
+- **Notes:** [v2.7 Release](/getting-started/release-notes/?version=v2.7.0)
+- **LTS Support until:** January 2025
+- **Milestone Issues:** [Github Issues](https://github.com/vuetifyjs/vuetify/milestone/59)
+
 ### v2.6 (Horizon)
 
 - **Released**: November 2021
 - **Notes**: [v2.6 Release](/getting-started/release-notes/?version=v2.6.0)
 - **Overview**:
   New [v-otp-input](/components/otp-input/) component, calendar event and scrolling improvements, minor features for other components.
-
-----
 
 ### v2.5 (Avalon)
 
@@ -120,8 +166,6 @@ The following are the already released **minor** and **major** version updates. 
   - Expand functionality of `v-data-table`
   - Quality of life improvements
   - General bug fixes
-
-----
 
 ### v2.4 (Endurance)
 
@@ -139,8 +183,6 @@ The following are the already released **minor** and **major** version updates. 
   - Support for a globally defined icon components
   - Improved accessibility in the `v-menu` component
 
-----
-
 ### v2.3 (Liberator)
 
 - **Released:** June 2020
@@ -153,23 +195,19 @@ The following are the already released **minor** and **major** version updates. 
   - Improve *Date Pickers, Data Tables, and Calendars*
   - Harden framework in preparation for **LTS version**
 
-----
-
 ### v2.2 (Tigris)
 
 - **Released:** January 2020
 - **Notes:** [v2.2 Release](/getting-started/release-notes/?version=v2.2.0)
 - **Overview:**
-  The introduction of Vuetify Presets. Will include the entire Material Design Studies collection and be _user customizable_. Will streamline the process for altering the default styles for the framework. Thousands of SASS variables will be added and a lookup tree for finding those variables will put into the documentation. For more information on Google's studies, please [navigate here](https://material.io/design/material-studies/about-our-material-studies.html).
+  The introduction of Vuetify Presets. Will include the entire Material Design Studies collection and be *user customizable*. Will streamline the process for altering the default styles for the framework. Thousands of SASS variables will be added and a lookup tree for finding those variables will put into the documentation. For more information on Google's studies, please [navigate here](https://material.io/design/material-studies/about-our-material-studies.html).
 - **Objectives:**
-  - Add _thousands_ of new SASS variables
+  - Add *thousands* of new SASS variables
   - Create a new Vuetify Service for bootstrapping pre-configured framework options; **Preset**
   - Create presets for the official [Material Design Studies](https://material.io/design/material-studies/about-our-material-studies.html)
   - Add new features and improve code styling of `v-badge`
   - Add new features and improve code styling of `v-expansion-panels`
   - new `v-theme-provider` component
-
-----
 
 ### v2.1 (Vanguard)
 
@@ -185,8 +223,6 @@ The following are the already released **minor** and **major** version updates. 
     - `v-intersect`
     - `v-mutate`
   - Add lazy loading support for `v-img`
-
-----
 
 ### v2.0 (Arcadia)
 
@@ -226,11 +262,9 @@ The following releases are old and unsupported **minor** and **major** versions:
 - **Overview:**
   Added new component, `v-calendar`. Improved functionality of `v-sparkline` with new **bar** and **fill** properties. Improved `v-treeview` and prepared for LTS. Navigate to the [Long-term Support Page](/introduction/long-term-support) for more information on LTS.
 
-<alert type="error">
-
+::: error
   v1.5 reached end of life on **July 31st, 2020** and is no longer actively maintained. It is recommended to update to the latest stable version of Vuetify using our [Upgrade guide](/getting-started/upgrade-guide/).
-
-</alert>
+:::
 
 ### v1.4
 

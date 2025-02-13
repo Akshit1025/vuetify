@@ -10,31 +10,34 @@ import { VCardText } from './VCardText'
 import { VDefaultsProvider } from '@/components/VDefaultsProvider'
 import { VImg } from '@/components/VImg'
 
-// Directives
-import { Ripple } from '@/directives/ripple'
-
 // Composables
-import { genOverlays, makeVariantProps, useVariant } from '@/composables/variant'
-import { IconValue } from '@/composables/icons'
-import { LoaderSlot, makeLoaderProps, useLoader } from '@/composables/loader'
 import { makeBorderProps, useBorder } from '@/composables/border'
 import { makeComponentProps } from '@/composables/component'
 import { makeDensityProps, useDensity } from '@/composables/density'
 import { makeDimensionProps, useDimension } from '@/composables/dimensions'
 import { makeElevationProps, useElevation } from '@/composables/elevation'
+import { IconValue } from '@/composables/icons'
+import { LoaderSlot, makeLoaderProps, useLoader } from '@/composables/loader'
 import { makeLocationProps, useLocation } from '@/composables/location'
 import { makePositionProps, usePosition } from '@/composables/position'
 import { makeRoundedProps, useRounded } from '@/composables/rounded'
 import { makeRouterProps, useLink } from '@/composables/router'
 import { makeTagProps } from '@/composables/tag'
 import { makeThemeProps, provideTheme } from '@/composables/theme'
+import { genOverlays, makeVariantProps, useVariant } from '@/composables/variant'
+
+// Directives
+import { Ripple } from '@/directives/ripple'
 
 // Utilities
 import { computed } from 'vue'
 import { genericComponent, propsFactory, useRender } from '@/util'
 
 // Types
+import type { PropType } from 'vue'
+import type { VCardItemSlots } from './VCardItem'
 import type { LoaderSlotProps } from '@/composables/loader'
+import type { RippleDirectiveBinding } from '@/directives/ripple'
 
 export const makeVCardProps = propsFactory({
   appendAvatar: String,
@@ -50,12 +53,12 @@ export const makeVCardProps = propsFactory({
   prependAvatar: String,
   prependIcon: IconValue,
   ripple: {
-    type: Boolean,
+    type: [Boolean, Object] as PropType<RippleDirectiveBinding['value']>,
     default: true,
   },
-  subtitle: String,
-  text: String,
-  title: String,
+  subtitle: [String, Number],
+  text: [String, Number],
+  title: [String, Number],
 
   ...makeBorderProps(),
   ...makeComponentProps(),
@@ -70,18 +73,15 @@ export const makeVCardProps = propsFactory({
   ...makeTagProps(),
   ...makeThemeProps(),
   ...makeVariantProps({ variant: 'elevated' } as const),
-}, 'v-card')
+}, 'VCard')
 
-export type VCardSlots = {
-  default: []
-  actions: []
-  title: []
-  subtitle: []
-  text: []
-  loader: [LoaderSlotProps]
-  image: []
-  prepend: []
-  append: []
+export type VCardSlots = VCardItemSlots & {
+  default: never
+  actions: never
+  text: never
+  loader: LoaderSlotProps
+  image: never
+  item: never
 }
 
 export const VCard = genericComponent<VCardSlots>()({
@@ -113,14 +113,14 @@ export const VCard = genericComponent<VCardSlots>()({
 
     useRender(() => {
       const Tag = isLink.value ? 'a' : props.tag
-      const hasTitle = !!(slots.title || props.title)
-      const hasSubtitle = !!(slots.subtitle || props.subtitle)
+      const hasTitle = !!(slots.title || props.title != null)
+      const hasSubtitle = !!(slots.subtitle || props.subtitle != null)
       const hasHeader = hasTitle || hasSubtitle
       const hasAppend = !!(slots.append || props.appendAvatar || props.appendIcon)
       const hasPrepend = !!(slots.prepend || props.prependAvatar || props.prependIcon)
       const hasImage = !!(slots.image || props.image)
       const hasCardItem = hasHeader || hasPrepend || hasAppend
-      const hasText = !!(slots.text || props.text)
+      const hasText = !!(slots.text || props.text != null)
 
       return (
         <Tag
@@ -149,10 +149,10 @@ export const VCard = genericComponent<VCardSlots>()({
             locationStyles.value,
             props.style,
           ]}
-          href={ link.href.value }
           onClick={ isClickable.value && link.navigate }
           v-ripple={ isClickable.value && props.ripple }
           tabindex={ props.disabled ? -1 : undefined }
+          { ...link.linkProps }
         >
           { hasImage && (
             <div key="image" class="v-card__image">

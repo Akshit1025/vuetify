@@ -1,16 +1,15 @@
 // Components
+import { VExpansionPanelSymbol } from './shared'
+import { makeVExpansionPanelTextProps, VExpansionPanelText } from './VExpansionPanelText'
 import { makeVExpansionPanelTitleProps, VExpansionPanelTitle } from './VExpansionPanelTitle'
-import { VExpansionPanelSymbol } from './VExpansionPanels'
-import { VExpansionPanelText } from './VExpansionPanelText'
+import { VDefaultsProvider } from '@/components/VDefaultsProvider'
 
 // Composables
-import { makeComponentProps } from '@/composables/component'
+import { useBackgroundColor } from '@/composables/color'
 import { makeElevationProps, useElevation } from '@/composables/elevation'
 import { makeGroupItemProps, useGroupItem } from '@/composables/group'
-import { makeLazyProps } from '@/composables/lazy'
 import { makeRoundedProps, useRounded } from '@/composables/rounded'
 import { makeTagProps } from '@/composables/tag'
-import { useBackgroundColor } from '@/composables/color'
 
 // Utilities
 import { computed, provide } from 'vue'
@@ -21,19 +20,18 @@ export const makeVExpansionPanelProps = propsFactory({
   text: String,
   bgColor: String,
 
-  ...makeComponentProps(),
   ...makeElevationProps(),
   ...makeGroupItemProps(),
-  ...makeLazyProps(),
   ...makeRoundedProps(),
   ...makeTagProps(),
   ...makeVExpansionPanelTitleProps(),
-}, 'v-expansion-panel')
+  ...makeVExpansionPanelTextProps(),
+}, 'VExpansionPanel')
 
 export type VExpansionPanelSlots = {
-  default: []
-  title: []
-  text: []
+  default: never
+  title: never
+  text: never
 }
 
 export const VExpansionPanel = genericComponent<VExpansionPanelSlots>()({
@@ -75,6 +73,9 @@ export const VExpansionPanel = genericComponent<VExpansionPanelSlots>()({
       const hasText = !!(slots.text || props.text)
       const hasTitle = !!(slots.title || props.title)
 
+      const expansionPanelTitleProps = VExpansionPanelTitle.filterProps(props)
+      const expansionPanelTextProps = VExpansionPanelText.filterProps(props)
+
       return (
         <props.tag
           class={[
@@ -101,31 +102,37 @@ export const VExpansionPanel = genericComponent<VExpansionPanelSlots>()({
             ]}
           />
 
-          { hasTitle && (
-            <VExpansionPanelTitle
-              key="title"
-              collapseIcon={ props.collapseIcon }
-              color={ props.color }
-              expandIcon={ props.expandIcon }
-              hideActions={ props.hideActions }
-              ripple={ props.ripple }
-            >
-              { slots.title ? slots.title() : props.title }
-            </VExpansionPanelTitle>
-          )}
+          <VDefaultsProvider
+            defaults={{
+              VExpansionPanelTitle: {
+                ...expansionPanelTitleProps,
+              },
+              VExpansionPanelText: {
+                ...expansionPanelTextProps,
+              },
+            }}
+          >
+            { hasTitle && (
+              <VExpansionPanelTitle key="title">
+                { slots.title ? slots.title() : props.title }
+              </VExpansionPanelTitle>
+            )}
 
-          { hasText && (
-            <VExpansionPanelText key="text" eager={ props.eager }>
-              { slots.text ? slots.text() : props.text }
-            </VExpansionPanelText>
-          )}
+            { hasText && (
+              <VExpansionPanelText key="text">
+                { slots.text ? slots.text() : props.text }
+              </VExpansionPanelText>
+            )}
 
-          { slots.default?.() }
+            { slots.default?.() }
+          </VDefaultsProvider>
         </props.tag>
       )
     })
 
-    return {}
+    return {
+      groupItem,
+    }
   },
 })
 

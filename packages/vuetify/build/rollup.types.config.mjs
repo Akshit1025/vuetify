@@ -10,8 +10,8 @@ import fg from 'fast-glob'
 import mm from 'micromatch'
 import MagicString from 'magic-string'
 
-import importMap from '../dist/json/importMap.json' assert { type: 'json' }
-import importMapLabs from '../dist/json/importMap-labs.json' assert { type: 'json' }
+import importMap from '../dist/json/importMap.json' with { type: 'json' }
+import importMapLabs from '../dist/json/importMap-labs.json' with { type: 'json' }
 
 const externalsPlugin = () => ({
   resolveId (source, importer) {
@@ -49,7 +49,12 @@ function createTypesConfig (input, output, renderChunk, filter) {
             code = new MagicString(code)
 
             if (renderChunk) await renderChunk(code)
+
+            // vue-router is optional but we need to include some of its types
             code.replaceAll(/import([^;])*?from 'vue-router'/gm, '// @ts-ignore\n$&')
+
+            // tsc adds extra export statements to namespaces
+            code.replaceAll(/^\s*export \{\s*\};?$/gm, '')
 
             const map = code.generateMap({
               // source: 'source.js',
@@ -78,12 +83,12 @@ async function getShims () {
     )).join('\n')
 
   return (await fs.readFile(fileURLToPath(new URL('../src/shims.d.ts', import.meta.url)), { encoding: 'utf8' }))
-    .replaceAll(/^\s*\/\/ @skip-build\s+.*$/gm, '')
+    .replaceAll(/^\s*\/\/ @skip-build\s[\s\S]*?\s$/gm, '')
     .replace(/^\s*\/\/ @generate-components$/gm, components)
 }
 
 export default [
-  createTypesConfig('framework.d.ts', 'lib/index.d.ts', async code => {
+  createTypesConfig('framework.d.ts', 'lib/index.d.mts', async code => {
     code.append('\n\n')
     code.append(await getShims())
   }),
@@ -92,9 +97,9 @@ export default [
     code.append('\n\n')
     code.append((await getShims()).replace(', VNodeChild } from \'vue\'', ' } from \'vue\''))
   }),
-  createTypesConfig('blueprints/*.d.ts', 'lib/blueprints/*.d.ts'),
-  createTypesConfig('components/index.d.ts', 'lib/components/index.d.ts'),
-  createTypesConfig('components/*/index.d.ts', 'lib/components/*/index.d.ts', undefined, files => {
+  createTypesConfig('blueprints/*.d.ts', 'lib/blueprints/*.d.mts'),
+  createTypesConfig('components/index.d.ts', 'lib/components/index.d.mts'),
+  createTypesConfig('components/*/index.d.ts', 'lib/components/*/index.d.mts', undefined, files => {
     const index = readFileSync(fileURLToPath(new URL('../src/components/index.ts', import.meta.url)), { encoding: 'utf8' })
     const block = Array.from(index.matchAll(/^\/\/ export \* from '\.\/(.*)'$/gm), m => m[1])
     return files.filter(file => !block.some(name => file.includes(`/${name}/`)))
@@ -102,11 +107,11 @@ export default [
   createTypesConfig('labs/entry-bundler.d.ts', 'dist/vuetify-labs.d.ts', code => {
     code.replaceAll(/type allComponents_d_V(\w+) = V(\w+);/gm, 'declare const allComponents_d_V$1: typeof V$2;')
   }),
-  createTypesConfig('labs/components.d.ts', 'lib/labs/components.d.ts'),
-  createTypesConfig('labs/*/index.d.ts', 'lib/labs/*/index.d.ts'),
-  createTypesConfig('labs/date/adapters/*.d.ts', 'lib/labs/date/adapters/*.d.ts'),
-  createTypesConfig('directives/index.d.ts', 'lib/directives/index.d.ts'),
-  createTypesConfig('locale/index.d.ts', 'lib/locale/index.d.ts'),
-  createTypesConfig('locale/adapters/*.d.ts', 'lib/locale/adapters/*.d.ts'),
-  createTypesConfig('iconsets/*.d.ts', 'lib/iconsets/*.d.ts'),
+  createTypesConfig('labs/components.d.ts', 'lib/labs/components.d.mts'),
+  createTypesConfig('labs/*/index.d.ts', 'lib/labs/*/index.d.mts'),
+  createTypesConfig('directives/index.d.ts', 'lib/directives/index.d.mts'),
+  createTypesConfig('locale/index.d.ts', 'lib/locale/index.d.mts'),
+  createTypesConfig('locale/adapters/*.d.ts', 'lib/locale/adapters/*.d.mts'),
+  createTypesConfig('iconsets/*.d.ts', 'lib/iconsets/*.d.mts'),
+  createTypesConfig('util/colors.d.ts', 'lib/util/colors.d.mts'),
 ].flat()

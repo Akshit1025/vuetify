@@ -5,22 +5,22 @@ import './VPagination.sass'
 import { VBtn } from '../VBtn'
 
 // Composables
-import { IconValue } from '@/composables/icons'
+import { useDisplay } from '@/composables'
 import { makeBorderProps } from '@/composables/border'
 import { makeComponentProps } from '@/composables/component'
+import { provideDefaults } from '@/composables/defaults'
 import { makeDensityProps } from '@/composables/density'
 import { makeElevationProps } from '@/composables/elevation'
+import { IconValue } from '@/composables/icons'
+import { useLocale, useRtl } from '@/composables/locale'
+import { useProxiedModel } from '@/composables/proxiedModel'
+import { useRefs } from '@/composables/refs'
+import { useResizeObserver } from '@/composables/resizeObserver'
 import { makeRoundedProps } from '@/composables/rounded'
 import { makeSizeProps } from '@/composables/size'
 import { makeTagProps } from '@/composables/tag'
 import { makeThemeProps, provideTheme } from '@/composables/theme'
 import { makeVariantProps } from '@/composables/variant'
-import { provideDefaults } from '@/composables/defaults'
-import { useDisplay } from '@/composables'
-import { useLocale, useRtl } from '@/composables/locale'
-import { useProxiedModel } from '@/composables/proxiedModel'
-import { useRefs } from '@/composables/refs'
-import { useResizeObserver } from '@/composables/resizeObserver'
 
 // Utilities
 import { computed, nextTick, shallowRef, toRef } from 'vue'
@@ -29,12 +29,27 @@ import { createRange, genericComponent, keyValues, propsFactory, useRender } fro
 // Types
 import type { ComponentPublicInstance } from 'vue'
 
+type ItemSlot = {
+  isActive: boolean
+  key: string | number
+  page: string
+  props: Record<string, any>
+}
+
+type ControlSlot = {
+  icon: IconValue
+  onClick: (e: Event) => void
+  disabled: boolean
+  'aria-label': string
+  'aria-disabled': boolean
+}
+
 export type VPaginationSlots = {
-  item: []
-  first: []
-  next: []
-  prev: []
-  last: []
+  item: ItemSlot
+  first: ControlSlot
+  prev: ControlSlot
+  next: ControlSlot
+  last: ControlSlot
 }
 
 export const makeVPaginationProps = propsFactory({
@@ -45,7 +60,7 @@ export const makeVPaginationProps = propsFactory({
   },
   modelValue: {
     type: Number,
-    default: (props: any) => props.start,
+    default: (props: any) => props.start as number,
   },
   disabled: Boolean,
   length: {
@@ -113,7 +128,7 @@ export const makeVPaginationProps = propsFactory({
   ...makeTagProps({ tag: 'nav' }),
   ...makeThemeProps(),
   ...makeVariantProps({ variant: 'text' } as const),
-}, 'v-pagination')
+}, 'VPagination')
 
 export const VPagination = genericComponent<VPaginationSlots>()({
   name: 'VPagination',
@@ -159,7 +174,7 @@ export const VPagination = genericComponent<VPaginationSlots>()({
     const start = computed(() => parseInt(props.start, 10))
 
     const totalVisible = computed(() => {
-      if (props.totalVisible) return parseInt(props.totalVisible, 10)
+      if (props.totalVisible != null) return parseInt(props.totalVisible, 10)
       else if (maxButtons.value >= 0) return maxButtons.value
       return getMax(width.value, 58)
     })
@@ -175,7 +190,8 @@ export const VPagination = genericComponent<VPaginationSlots>()({
     const range = computed(() => {
       if (length.value <= 0 || isNaN(length.value) || length.value > Number.MAX_SAFE_INTEGER) return []
 
-      if (totalVisible.value <= 1) return [page.value]
+      if (totalVisible.value <= 0) return []
+      else if (totalVisible.value === 1) return [page.value]
 
       if (length.value <= totalVisible.value) {
         return createRange(length.value, start.value)
@@ -193,7 +209,7 @@ export const VPagination = genericComponent<VPaginationSlots>()({
         const rangeStart = length.value - rangeLength + start.value
         return [start.value, props.ellipsis, ...createRange(rangeLength, rangeStart)]
       } else {
-        const rangeLength = Math.max(1, totalVisible.value - 3)
+        const rangeLength = Math.max(1, totalVisible.value - 2)
         const rangeStart = rangeLength === 1 ? page.value : page.value - Math.ceil(rangeLength / 2) + start.value
         return [start.value, props.ellipsis, ...createRange(rangeLength, rangeStart), props.ellipsis, length.value]
       }
@@ -248,8 +264,8 @@ export const VPagination = genericComponent<VPaginationSlots>()({
               icon: true,
               disabled: !!props.disabled || +props.length < 2,
               color: isActive ? props.activeColor : props.color,
-              ariaCurrent: isActive,
-              ariaLabel: t(isActive ? props.currentPageAriaLabel : props.pageAriaLabel, item),
+              'aria-current': isActive,
+              'aria-label': t(isActive ? props.currentPageAriaLabel : props.pageAriaLabel, item),
               onClick: (e: Event) => setValue(e, item),
             },
           }
@@ -266,29 +282,29 @@ export const VPagination = genericComponent<VPaginationSlots>()({
           icon: isRtl.value ? props.lastIcon : props.firstIcon,
           onClick: (e: Event) => setValue(e, start.value, 'first'),
           disabled: prevDisabled,
-          ariaLabel: t(props.firstAriaLabel),
-          ariaDisabled: prevDisabled,
+          'aria-label': t(props.firstAriaLabel),
+          'aria-disabled': prevDisabled,
         } : undefined,
         prev: {
           icon: isRtl.value ? props.nextIcon : props.prevIcon,
           onClick: (e: Event) => setValue(e, page.value - 1, 'prev'),
           disabled: prevDisabled,
-          ariaLabel: t(props.previousAriaLabel),
-          ariaDisabled: prevDisabled,
+          'aria-label': t(props.previousAriaLabel),
+          'aria-disabled': prevDisabled,
         },
         next: {
           icon: isRtl.value ? props.prevIcon : props.nextIcon,
           onClick: (e: Event) => setValue(e, page.value + 1, 'next'),
           disabled: nextDisabled,
-          ariaLabel: t(props.nextAriaLabel),
-          ariaDisabled: nextDisabled,
+          'aria-label': t(props.nextAriaLabel),
+          'aria-disabled': nextDisabled,
         },
         last: props.showFirstLastPage ? {
           icon: isRtl.value ? props.firstIcon : props.lastIcon,
           onClick: (e: Event) => setValue(e, start.value + length.value - 1, 'last'),
           disabled: nextDisabled,
-          ariaLabel: t(props.lastAriaLabel),
-          ariaDisabled: nextDisabled,
+          'aria-label': t(props.lastAriaLabel),
+          'aria-disabled': nextDisabled,
         } : undefined,
       }
     })
@@ -325,7 +341,7 @@ export const VPagination = genericComponent<VPaginationSlots>()({
         <ul class="v-pagination__list">
           { props.showFirstLastPage && (
             <li key="first" class="v-pagination__first" data-test="v-pagination-first">
-              { slots.first ? slots.first(controls.value.first) : (
+              { slots.first ? slots.first(controls.value.first!) : (
                 <VBtn _as="VPaginationBtn" { ...controls.value.first } />
               )}
             </li>
@@ -370,7 +386,7 @@ export const VPagination = genericComponent<VPaginationSlots>()({
               class="v-pagination__last"
               data-test="v-pagination-last"
             >
-              { slots.last ? slots.last(controls.value.last) : (
+              { slots.last ? slots.last(controls.value.last!) : (
                 <VBtn _as="VPaginationBtn" { ...controls.value.last } />
               )}
             </li>

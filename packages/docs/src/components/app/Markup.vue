@@ -1,9 +1,9 @@
 <template>
   <v-sheet
     ref="root"
-    :theme="isDark ? 'dark' : 'light'"
-    :color="isDark ? '#1F1F1F' : 'grey-lighten-4'"
+    :color="theme.name.value === 'light' && !user.mixedTheme ? 'surface-bright' : undefined"
     :rounded="rounded"
+    :theme="theme.name.value === 'light' && user.mixedTheme ? 'dark' : theme.name.value"
     class="app-markup overflow-hidden"
     dir="ltr"
   >
@@ -25,20 +25,23 @@
       </v-sheet>
     </v-toolbar>
 
-    <v-tooltip location="bottom">
+    <v-tooltip location="start">
       <template #activator="{ props: activatorProps }">
-        <v-btn
-          :icon="clicked ? 'mdi-check' : 'mdi-clipboard-text'"
-          class="me-1 text-disabled me-2 mt-2 app-markup-btn"
-          density="compact"
-          style="position: absolute; right: 0; top: 0;"
-          v-bind="activatorProps"
-          variant="text"
-          @click="copy"
-        />
+        <v-fade-transition hide-on-leave>
+          <v-btn
+            :key="icon"
+            :icon="icon"
+            class="text-disabled me-3 mt-1 app-markup-btn"
+            density="comfortable"
+            style="position: absolute; right: 0; top: 0;"
+            v-bind="activatorProps"
+            variant="text"
+            @click="copy"
+          />
+        </v-fade-transition>
       </template>
 
-      <span>{{ t('copy-example-source') }}</span>
+      <span>{{ t('copy-source') }}</span>
     </v-tooltip>
 
     <div class="pa-4 pe-12">
@@ -65,16 +68,8 @@
   import 'prismjs/components/prism-scss.js'
   import 'prismjs/components/prism-typescript.js'
 
-  // Composables
-  import { useI18n } from 'vue-i18n'
-  import { useTheme } from 'vuetify'
-  import { useUserStore } from '@/store/user'
-
-  // Utilities
-  import { ComponentPublicInstance, computed, ref, watchEffect } from 'vue'
-  import { IN_BROWSER } from '@/util/globals'
-  import { wait } from '@/util/helpers'
-  import { stripLinks } from '@/components/api/utils'
+  // Types
+  import type { ComponentPublicInstance } from 'vue'
 
   const props = defineProps({
     resource: String,
@@ -115,41 +110,24 @@
     highlighted.value = props.code && props.language && Prism.highlight(await props.code, Prism.languages[props.language], props.language)
   })
 
-  const className = computed(() => `langauge-${props.language}`)
+  const className = computed(() => `language-${props.language}`)
+  const icon = computed(() => clicked.value ? 'mdi-check' : 'mdi-clipboard-text-outline')
 
   async function copy () {
-    if (!IN_BROWSER || !root.value) return
+    const el = root.value?.$el.querySelector('code')
 
-    const el = root.value.$el.querySelector('code')
-
-    if (!el) return
-
-    el.setAttribute('contenteditable', 'true')
-    el.focus()
-
-    document.execCommand('selectAll', false, undefined)
-    document.execCommand('copy')
-
-    el.removeAttribute('contenteditable')
+    navigator.clipboard.writeText(props.code || el?.innerText || '')
 
     clicked.value = true
 
-    await wait(500)
-
-    window.getSelection()?.removeAllRanges()
+    await wait(2000)
 
     clicked.value = false
   }
-
-  const isDark = computed(() => {
-    return user.mixedTheme || theme.current.value.dark
-  })
-
 </script>
 
 <style lang="sass">
   .v-sheet.app-markup
-    // margin: 16px 0
     position: relative
 
     &:not(:hover)
@@ -158,9 +136,6 @@
 
     &:not(:hover) .v-btn--copy .v-icon
       opacity: .4
-
-    > pre
-      border-radius: inherit
 
     code,
     pre
@@ -181,7 +156,8 @@
       word-spacing: normal
       word-wrap: normal
 
-    pre
+    pre,
+    code
       &::after
         bottom: .5rem
         color: hsla(0, 0%, 19%, 0.5)
@@ -190,7 +166,7 @@
         font-weight: 700
         pointer-events: none
         position: absolute
-        right: .5rem
+        right: 1rem
         text-transform: uppercase
 
     pre.language-bash::after
@@ -200,7 +176,7 @@
       content: 'html'
 
     pre.language-js::after
-      content: 'js'
+      content: ' js '
 
     pre.language-json::after
       content: 'json'
@@ -208,16 +184,20 @@
     pre.language-sass::after
       content: 'sass'
 
-    pre.language-scss::after
+    code.language-scss::after
       content: 'scss'
 
     pre.language-ts::after
-      content: 'ts'
+      content: ' ts '
 
     pre.language-vue::after
       content: 'vue'
 
+    // TODO: handle this differently
+    &.v-theme--blackguard,
     &.v-theme--dark
+      --prism-interpolation: var(--prism-operator)
+
       code,
       pre
         color: #ccc !important
@@ -225,6 +205,7 @@
         &::selection, ::selection
           background-color: #113663
 
+      code,
       pre
         &::after
           color: hsla(0, 0%, 50%, 1)
